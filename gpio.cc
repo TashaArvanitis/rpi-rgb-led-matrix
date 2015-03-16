@@ -14,6 +14,7 @@
 #define BLOCK_SIZE (4*1024)
 
 // GPIO setup macros. Always use INP_GPIO(x) before using OUT_GPIO(x) or SET_GPIO_ALT(x,y)
+// What are these supposed to do? Magic with memory, as far as I can tell.
 #define INP_GPIO(g) *(gpio_port_+((g)/10)) &= ~(7<<(((g)%10)*3))
 #define OUT_GPIO(g) *(gpio_port_+((g)/10)) |=  (1<<(((g)%10)*3))
 #define SET_GPIO_ALT(g,a) *(gpio+(((g)/10))) |= (((a)<=3?(a)+4:(a)==4?3:2)<<(((g)%10)*3))
@@ -25,8 +26,10 @@
 = ((1 <<  2) | (1 <<  3) | (1 <<  4) | (1 <<  7)| (1 << 8) | (1 <<  9) |
    (1 << 10) | (1 << 11) | (1 << 14) | (1 << 15)| (1 <<17) | (1 << 18)|
    (1 << 22) | (1 << 23) | (1 << 24) | (1 << 25)| (1 << 27));
-   
 
+// I am confused by their use of bits 11, 14, 15, and 27, all of which are 
+// unused in led-matrix.h
+   
 GPIO::GPIO() : output_bits_(0), gpio_port_(NULL) {
 }
    
@@ -38,6 +41,7 @@ uint32_t GPIO::InitOutputs(uint32_t outputs) {
   outputs &= kValidBits;   // Sanitize input.
   output_bits_ = outputs;
   for (uint32_t b = 0; b < 27; ++b) {
+    // Set pins high where dictated by output_bits_
     if (outputs & (1 << b)) {
       INP_GPIO(b);   // for writing, we first need to set as input.
       OUT_GPIO(b);
@@ -56,11 +60,11 @@ bool GPIO::Init() {
 
   char *gpio_map =
     (char*) mmap(NULL,             //Any adddress in our space will do
-         BLOCK_SIZE,       //Map length
-         PROT_READ|PROT_WRITE,// Enable reading & writting to mapped memory
-         MAP_SHARED,       //Shared with other processes
-         mem_fd,           //File to map
-         GPIO_BASE         //Offset to GPIO peripheral
+         BLOCK_SIZE,               //Map length
+         PROT_READ|PROT_WRITE,     // Enable reading & writting to mapped memory
+         MAP_SHARED,               //Shared with other processes
+         mem_fd,                   //File to map
+         GPIO_BASE                 //Offset to GPIO peripheral
          );
 
   close(mem_fd); //No need to keep mem_fd open after mmap

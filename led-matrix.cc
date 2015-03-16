@@ -1,10 +1,11 @@
 // Some experimental code.
 // (c) H. Zeller <h.zeller@acm.org>. License: do whatever you want with it :)
 // 2013-12 - Modified for a 16x32 matrix (half the original panel)
+// 2015-03 - Modified for a 32x64 matrix (twice the original)
 //
-// Using GPIO to control a 16x32 rgb LED panel (typically you find them with the
+// Using GPIO to control a 32x64 rgb LED panel (typically you find them with the
 // suffix such as P4 or P5: that is the pitch in mm.
-// So "32x32 rgb led p5" should find you something on 'the internets'.
+// So "32x32 rgb led p5" should find you something on 'the internets'.)
 
 #include "led-matrix.h"
 
@@ -19,7 +20,7 @@
 // Clocking in a row takes about 3.4usec (TODO: this is actually per board)
 // Because clocking the data in is part of the 'wait time', we need to
 // substract that from the row sleep time.
-static const int kRowClockTime = 3400;
+static const int kRowClockTime = 3400; // TODO: figure out what this is for our setup
 static const int kBaseTime = kRowClockTime;  // smallest possible value.
 
 const long row_sleep_nanos[8] = {   // Only using the first kPWMBits elements.
@@ -49,6 +50,7 @@ static void sleep_nanos(long nanos) {
     nanosleep(&sleep_time, NULL);
   } else {
     // The following loop is determined empirically on a 700Mhz RPi
+    // TODO: calibrate for our thing.
     for (int i = nanos >> 2; i != 0; --i) {
       asm("");   // force GCC not to optimize this away.
     }
@@ -62,7 +64,7 @@ RGBMatrix::RGBMatrix(GPIO *io) : io_(io) {
   b.bits.output_enable = b.bits.clock = b.bits.strobe = 1;
   b.bits.r1 = b.bits.g1 = b.bits.b1 = 1;
   b.bits.r2 = b.bits.g2 = b.bits.b2 = 1;
-  b.bits.row = 0x7; // 8 rows, 0-based
+  b.bits.row = 0x7; // 16 rows, 0-based
   
   // Initialize outputs, make sure that all of these are supported bits.
   const uint32_t result = io_->InitOutputs(b.raw);
@@ -79,7 +81,7 @@ void RGBMatrix::SetPixel(uint8_t x, uint8_t y,
                          uint8_t red, uint8_t green, uint8_t blue) {
   if (x >= width() || y >= height()) return;
 
-  // My setup: A single panel connected  [>] 16 rows & 32 columns.
+  // My setup: A single panel connected  [>] 32 rows & 64 columns.
   
   // TODO: re-map values to be luminance corrected (sometimes called 'gamma').
   // Ideally, we had like 10PWM bits for this, but we're too slow for that :/
@@ -93,7 +95,7 @@ void RGBMatrix::SetPixel(uint8_t x, uint8_t y,
   for (int b = 0; b < kPWMBits; ++b) {
     uint8_t mask = 1 << b;
     IoBits *bits = &bitplane_[b].row[y & 0x7].column[x];  // 8 rows, 0-based
-    if (y < 8) {    // Upper sub-panel. - 16 actual rows; 8 high & 8 low
+    if (y < 16) {    // Upper sub-panel. - 32 actual rows; 16 high & 16 low
       bits->bits.r1 = (red & mask) == mask;
       bits->bits.g1 = (green & mask) == mask;
       bits->bits.b1 = (blue & mask) == mask;

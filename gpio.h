@@ -20,6 +20,10 @@ class GPIO {
   uint32_t InitOutputs(uint32_t outputs);
 
   // Set the bits that are '1' in the output. Leave the rest untouched.
+  //
+  // I am very confused by these functions - what's with the pointer
+  // increments and setting them to value? This doesn't do anything about
+  // clearing or setting specific bits that are '1' in the output?
   inline void SetBits(uint32_t value) {
     *(gpio_port_ + 7) = value;
   }
