@@ -13,6 +13,7 @@ class RGBMatrix {
   void ClearScreen();
 
   // Here the set-up  [>] - Only one 16x32 panel
+  // Problem: make this a 64x32 panel
   int width() const { return 32; }
   int height() const { return 16; }
   void SetPixel(uint8_t x, uint8_t y,
@@ -41,6 +42,7 @@ private:
       unsigned int strobe : 1;   // 4
       unsigned int unused2 : 2;  // 5..6
       unsigned int row : 3;  // 7..9
+      // Problem: shouldn't we also take D? (to pick the row for a 32-high display)
       unsigned int unused3 : 7;  // 10..16
       unsigned int r1 : 1;   // 17
       unsigned int g1 : 1;   // 18
@@ -56,6 +58,7 @@ private:
 
   // A double row represents row n and n+8. The physical layout of the
   // 16x32 RGB is two sub-panels with 32 columns and 8 rows.
+  // Problem: shouldn't this be 32 high and therefore n+16?
   struct DoubleRow {
     IoBits column[kColumns];  // only color bits are set
   };

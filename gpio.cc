@@ -32,7 +32,7 @@ GPIO::GPIO() : output_bits_(0), gpio_port_(NULL) {
    
 uint32_t GPIO::InitOutputs(uint32_t outputs) {
   if (gpio_port_ == NULL) {
-    fprintf(stderr, "Attempt to init outputs but initialized.\n");
+    fprintf(stderr, "Attempt to init outputs but not initialized.\n");
     return 0;
   }
   outputs &= kValidBits;   // Sanitize input.
