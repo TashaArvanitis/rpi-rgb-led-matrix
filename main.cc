@@ -258,29 +258,29 @@ int main(int argc, char *argv[]) {
     
   RGBMatrixManipulator *image_gen = NULL;
   switch (demo) {
-  case 0:
-    image_gen = new RotatingBlockGenerator(&m);
-    break;
+    case 0:
+      image_gen = new RotatingBlockGenerator(&m);
+      break;
 
-  case 1:
-    if (argc > 2) {
-      ImageScroller *scroller = new ImageScroller(&m);
-      if (!scroller->LoadPPM(argv[2]))
+    case 1:
+      if (argc > 2) {
+        ImageScroller *scroller = new ImageScroller(&m);
+        if (!scroller->LoadPPM(argv[2]))
+          return 1;
+        image_gen = scroller;
+      } else {
+        fprintf(stderr, "Demo %d Requires PPM image as parameter\n", demo);
         return 1;
-      image_gen = scroller;
-    } else {
-      fprintf(stderr, "Demo %d Requires PPM image as parameter", demo);
-      return 1;
-    }
-    break;
+      }
+      break;
 
-  case 2:
-    image_gen = new SimpleSquare(&m);
-    break;
+    case 2:
+      image_gen = new SimpleSquare(&m);
+      break;
 
-  default:
-    image_gen = new ColorPulseGenerator(&m);
-    break;
+    default:
+     image_gen = new ColorPulseGenerator(&m);
+     break;
   }
 
   if (image_gen == NULL)
