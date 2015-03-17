@@ -94,8 +94,10 @@ void RGBMatrix::SetPixel(uint8_t x, uint8_t y,
 
   for (int b = 0; b < kPWMBits; ++b) {
     uint8_t mask = 1 << b;
-    IoBits *bits = &bitplane_[b].row[y & 0xF].column[x];  // 8 rows, 0-based
+    IoBits *bits = &bitplane_[b].row[y & 0xF].column[x];  // 16 rows, 0-based
     if (y < 16) {    // Upper sub-panel. - 32 actual rows; 16 high & 16 low
+      // TODO: figure out why mask is '=='d with (color & mask) as opposed
+      // to just anding the color? So confused...
       bits->bits.r1 = (red & mask) == mask;
       bits->bits.g1 = (green & mask) == mask;
       bits->bits.b1 = (blue & mask) == mask;
@@ -114,7 +116,7 @@ void RGBMatrix::UpdateScreen() {
   serial_mask.bits.clock = 1;
 
   IoBits row_mask;
-  row_mask.bits.row = 0xF;  // 8 rows, 0-based
+  row_mask.bits.row = 0xF;  // 16 rows, 0-based
 
   IoBits clock, output_enable, strobe;    
   clock.bits.clock = 1;
@@ -128,7 +130,7 @@ void RGBMatrix::UpdateScreen() {
     for (int b = 0; b < kPWMBits; ++b) {
       const DoubleRow &rowdata = bitplane_[b].row[row];
 
-      // Clock in the row. The time this takes is the smalles time we can
+      // Clock in the row. The time this takes is the smallest time we can
       // leave the LEDs on, thus the smallest time-constant we can use for
       // PWM (doubling the sleep time with each bit).
       // So this is the critical path; I'd love to know if we can employ some
